@@ -1,0 +1,4 @@
+2/15- We're working on app ideas and continuing to work with swift in class. Macincloud is making it hard but we'll get it sorted out I'm sure.
+2/22 - Started ideating for street SM4T. Still having major macincloud issue which makes it difficult to actually get started.
+3/1 - Started working on Street SM4T. Sorting through API documentation is a pain in the ass but it should add tons of functionality to the final product.
+3/8 - I'm going to need to rent a mac to make this work... I lost hours worth of work on Street SM4T to a crash. I'm going to keep working on the server backend since that'll be the more difficult part anyway and figure the app out when I have the development resources I need.
