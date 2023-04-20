@@ -1,0 +1,285 @@
+https://stackoverflow.com/questions/41492216/how-do-you-constantly-run-in-background
+
+https://stackoverflow.com/questions/22823126/app-alarmy-is-able-to-play-itunes-song-from-background-state-how
+
+https://stackoverflow.com/questions/55546865/wake-up-application-in-background-using-audiosession-like-alarmy-ios-app
+
+https://www.reddit.com/r/swift/comments/vc126a/how_alarmy_and_other_similar_apps_work
+
+https://stackoverflow.com/questions/59708917/how-to-create-an-ios-alarm-clock-that-runs-in-the-background-properly
+
+https://stackoverflow.com/questions/43538553/is-it-possible-to-build-an-alarm-clock-such-as-the-built-in-app-from-apple/43539458#43539458
+
+https://stackoverflow.com/questions/50644978/how-are-some-alarm-apps-such-as-alarmy-able-to-play-a-sound-on-iphone-when-the-a
+
+https://stackoverflow.com/questions/55259375/building-an-alarm-application-in-ios
+
+https://web.archive.org/web/20220522190833/http://andrewmarinov.com/building-an-alarm-app-on-ios/
+
+https://m.youtube.com/watch?v=dxxCPdcMcFw&feature=youtu.be
+
+
+Source Code: 
+
+Main one:
+https://github.com/iRogerz/AlarmClock/tree/main/alertClock
+
+https://github.com/brimizer/AlarmKit
+
+https://github.com/ignusloki/PeladaTimer
+
+https://www.reddit.com/r/swift/comments/10o11ap/is_it_illegal_to_continuosly_play_silent_audio/?utm_source=share&utm_medium=ios_app&utm_name=ioscss&utm_content=2&utm_term=1
+
+
+
+
+LettuceMeet: https://lettucemeet.com/l/ONO1q
+
+3/20 Notes:
+Have a timer get the time of day when app is opened then have it run in the background
+iOS is iffy about this so its a point to consider 
+Design a UI on swift for the app after the wireframing we did already
+A database that stores the alarm time?
+Test with short term alarms first 
+
+
+
+
+Apple has strict rules in place regarding background processes to optimize battery life and device performance. However, you can still create an alarm clock app by using the available background modes and local notifications.
+
+
+
+Alarmy (Sleep If U Can) is a popular alarm clock app that uses various techniques to ensure users wake up, such as asking users to solve math problems, scan barcodes, or shake their phones. The app relies on local notifications to wake users up, just like any other iOS alarm clock app.
+
+Alarmy uses local notifications to schedule alarms at the desired time. When the alarm is triggered, the app presents the user with the configured wake-up tasks. The user must complete these tasks to stop the alarm sound. The custom sound for the local notification might be limited to 30 seconds, but the app ensures that users have to interact with the app to stop the alarm, which extends the duration of the alarm sound.
+
+Here's a general idea of how Alarmy might work:
+
+Schedule a local notification with a custom sound for the alarm time.
+When the user interacts with the notification, the app launches (or comes to the foreground) and presents the wake-up tasks.
+The alarm sound continues to play in the app while the user attempts to complete the tasks.
+Once the user completes the tasks, the alarm sound stops, and the alarm is considered dismissed.
+This approach doesn't require continuous background execution, as the app relies on local notifications to trigger the alarm sound. When the user interacts with the notification, the app becomes active and can continue playing the alarm sound while the user completes the wake-up tasks. By forcing the user to engage with the app, Alarmy ensures that the alarm is more effective at waking the user up.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+My idea for an alarm clock app in Swift:
+
+
+When the user sets an alarm, it schedules a local notification to ring at that time. Since it's a local notification, even if the user closes the app completely it will still ring. If the user has the app open in the background, then there are no issues since it can ring as much as the app can since the app is technically open. However, if the user closes the app from the background, the app will send a local notification at the time that was set. Once that first local notification is triggered, it also executes code to spam schedule local notifications in 5 second intervals that play an obnoxious sound to simulate an alarm. My only issue is how the app would schedule all the local notifications in rapid 5 second intervals until the user opens the app to stop the alarm, since I am assuming it can't keep scheduling local notifications if the app is not open in the background. Any suggestions?
+
+You're correct that you cannot continuously schedule local notifications when the app is not running or in the background. However, you can still create an effective alarm clock app with a few adjustments.
+Instead of scheduling multiple local notifications with 5-second intervals when the alarm is triggered, you can schedule a series of notifications ahead of time, when the user sets the alarm. This way, you'll have multiple notifications already scheduled to go off at the desired intervals, even if the app is not running or in the background.
+Here's a step-by-step guide:
+When the user sets an alarm, schedule the first local notification to ring at the alarm time.
+Schedule additional local notifications at 5-second intervals for a predetermined duration (e.g., 5 minutes). This will create a series of notifications that simulate the alarm going off.
+When the app is in the foreground or background and the alarm is triggered, you can use in-app code to play the obnoxious sound and simulate the alarm effect.
+When the user interacts with any of the local notifications, open the app and stop the alarm sound. To do this, you can use the UNUserNotificationCenterDelegate methods, such as userNotificationCenter(_:didReceive:withCompletionHandler:), to detect when the user interacts with a notification.
+Once the user stops the alarm, cancel any remaining scheduled local notifications using the UNUserNotificationCenter method removePendingNotificationRequests(withIdentifiers:).
+Keep in mind that there is a limit to the number of local notifications an app can schedule (64 notifications per app). If you reach this limit, the system discards the oldest notifications. So, be mindful of this limitation when scheduling multiple notifications at 5-second intervals.
+Also, be sure to handle edge cases like the user snoozing or dismissing the alarm. You may need to adjust your scheduled notifications accordingly.
+
+So what about when the app was closed in the background and is sending the prescheduled 5 second interval notifications to simulate an alarm, but the user opens the app. In this case, I am assuming all local notifications would be canceled instantly, and the app would instead play the alarm? But then what if the user closes the app again?
+
+When the user opens the app while the pre-scheduled local notifications are being triggered, you can cancel all the remaining local notifications and start playing the alarm sound within the app instead. Here's how to handle this situation:
+
+In your AppDelegate, implement the applicationDidBecomeActive(_:) method. This method is called when the app becomes active (i.e., the user opens the app).
+
+Inside applicationDidBecomeActive(_:), cancel all remaining local notifications using the UNUserNotificationCenter method removeAllPendingNotificationRequests().
+
+Start playing the alarm sound within the app.
+
+If the user closes the app again, you'll need to reschedule the local notifications from the time the app is closed. To handle this case, implement the applicationDidEnterBackground(_:) method in your AppDelegate.
+
+Inside applicationDidEnterBackground(_:), schedule a new set of local notifications at 5-second intervals from the current time, simulating the alarm.
+
+Here's some example code for AppDelegate:
+
+
+
+
+
+
+What about if the user has the app in the background at first, then opens the app, and closes the app again. The local notifications would have been canceled and the alarm is effectively canceled.
+You're correct. In the scenario you mentioned, the alarm would effectively be canceled if the user opens the app, causing the remaining local notifications to be canceled, and then closes the app again. To handle this situation, you can set a flag in your app to track whether the alarm has been stopped or not. Here's how to do it:
+Add a flag (e.g., alarmStopped) in your app's data model or a shared instance to track the alarm's state. Set its default value to false.
+In the applicationDidBecomeActive(_:) method in your AppDelegate, only cancel the remaining local notifications and start playing the alarm sound within the app if the alarmStopped flag is false. If the alarmStopped flag is true, do nothing.
+In the applicationDidEnterBackground(_:) method in your AppDelegate, only schedule new local notifications if the alarmStopped flag is false. If the alarmStopped flag is true, do nothing.
+When the user stops the alarm within the app, set the alarmStopped flag to true.
+Social Accountability Logic:
+
+Users can sync their contacts and select which ones to text. They can also manually put in Phone numbers and emails. The two primary features will be phone number and email.
+
+Phone number for friends and family. This will be a more “fun” aspect and more marketable since it incentivizes the user to get the app to try with their friends or close ones. Will use third party service to text the number they input like Twilio. Example:
+
+Third party number texts your friend / sibling“Chris Kong didn’t wake up today. Shame.” 
+Third party number texts your parent “Chris slept in today”
+
+
+Email for higher up people. This would be more focused on utilizing accountability to the max by threatening an informal message to be sent to a higher authority figure like professor or boss. Example:
+
+Alarmer email with subject Christopher Kong slept in today….
+Email contains user defined messages, with information about the app. 
+
+Github Instructions:
+
+Main is the main branch that should be the base app. Everyone should work on their own branch. To get information from main to your branch, create a pull request ON GITHUB, with the base as YOUR BRANCH, and “compare” as MAIN. This will take everything from main into your branch. Now to update your branch, commit and push as needed to your OWN branch. Once you believe that your work is ready to push to main, make a pull request ON GITHUB with base as MAIN and “compare” as YOUR BRANCH. 
+
+CHATGPT:
+
+I want to make an iOS social accountability alarm clock app. The user should be able to schedule an alarm. Once the alarm sounds, after 1 minute, the app will check if the user has "woken up". what "woken up" means will be defined later. If the user has woken up, nothing happens and the alarm is dismissed. If the user has not woken up, the system should send a text message that the user wrote in the app to a user specified phone number that was stored when the user created the alarm utilizing Twilio API through a third party number. 
+
+Here is how the alarm system would work:
+
+When the user sets an alarm, it schedules a series of about 50 local notification spread in 5 second intervals to simulate an "alarm" to ring at that time. Since it's local notifications, even if the user closes the app completely it will still ring. If the user has the app open in the background, then there are no issues since it can ring as much as the app can since the app is technically open and can play any sound continuously. However, if the user closes the app from the background, the app will send the scheduled local notifications at the time that was set, and in continuous 5 second intervals after until the notification limit is reached. Each notification sound is supposed to be obnoxious and lasts as long as possible to best simulate a continuous alarm ring. 
+
+If the user opens the app after the app was previously closed and not running in the background, the app should switch to playing the alarm sound in the app instead of through local notifications. However, if the app was initially closed, then the user opens the app, a flag in the app will track whether or not the alarm is dismissed. If the alarm is not dismissed, then the local notifications are not canceled, and would continue sending in intervals if the user closes the app again without dismissing the alarm. IF the user dismisses the alarm, then the local notifications would be canceled, and the alarm sound within the app would stop playing as well. 
+
+With all of this information, please describe how I would diagram a system design for this app which is built in Swift and SwiftUI, using Twilio API for the messages. Please advise if any additional technologies are needed. Describe the structure of the app, and what views and files I would need. 
+
+To design this iOS social accountability alarm clock app, you'll be using Swift and SwiftUI for development and Twilio API for sending text messages. Here's a high-level overview of the structure and components of the app:
+
+App structure:
+
+a. Main App
+b. ContentView
+c. AlarmListView - Chris 
+d. AlarmDetailView - Chris 
+e. AlarmScheduler - Mohamad
+f. AlarmNotificationManager -  Mohamad
+g. AlarmPlayer - Seb
+h. TwilioAPIManager - Seb
+i. Location - Will 
+J. info.plist - Will
+
+Views and files:
+
+a. Main App - The entry point of the app, which initializes and manages the alarm and Twilio API managers.
+
+b. ContentView - The main container view for the app, holding the AlarmListView and any other required components.
+
+c. AlarmListView - A list view showing all scheduled alarms. Users can add, edit, or delete alarms.
+
+d. AlarmDetailView - A detailed view for setting or editing an alarm, including the alarm time, message, and recipient's phone number.
+
+e. AlarmScheduler - A class responsible for scheduling and managing alarms using local notifications.
+
+f. AlarmNotificationManager - A class responsible for handling local notifications, including scheduling, canceling, and receiving alarm notifications.
+
+g. AlarmPlayer - A class responsible for playing the alarm sound when the app is open, as well as handling user interactions such as dismissing the alarm.
+
+h. TwilioAPIManager - A class responsible for sending text messages using the Twilio API when the user fails to wake up.
+I. Location.swift. Contains functions with methods that can be called to periodically check if the phone’s location has moved to test whether the user is awake.
+J. info.plist. PERMISSION FILE DO NOT DELETE. If we need more permissions we add to it.
+
+
+Additional technologies:
+
+a. UserNotifications framework - For scheduling and handling local notifications.
+b. AVFoundation framework - For playing alarm sounds.
+
+Diagram and workflow:
+
+Main App initializes ContentView, AlarmScheduler, AlarmNotificationManager, AlarmPlayer, and TwilioAPIManager.
+ContentView displays AlarmListView, which shows the user's scheduled alarms.
+When a user adds or edits an alarm, AlarmDetailView is shown, where users can set the alarm time, message, and recipient's phone number.
+Upon saving an alarm, AlarmScheduler schedules a series of local notifications using AlarmNotificationManager.
+When the alarm is triggered, AlarmNotificationManager sends local notifications at 5-second intervals.
+If the app is open, AlarmPlayer plays the alarm sound.
+When the user opens the app, AlarmPlayer takes over playing the alarm sound and stops the local notifications from being sent.
+If the user fails to wake up within one minute, TwilioAPIManager sends a text message to the specified phone number.
+By following this high-level structure and workflow, you can create a functional iOS alarm clock app with social accountability features. Make sure to handle various app states, user permissions, and error cases throughout the development process.
+
+
+WILL
+To add a location-based feature to check if the user has woken up, you'll need to integrate CoreLocation framework to your app. This feature can be added to the existing structure as follows:
+
+Add a new class LocationManager to handle location-related functionality.
+Update the AlarmDetailView to allow users to toggle the location-based wake-up check feature on or off.
+Update the AlarmScheduler to include the location-based wake-up check feature when scheduling alarms.
+Update the AlarmNotificationManager to handle location updates and check if the user has left the specified range.
+Here's a description of the new and updated components:
+
+a. LocationManager: A class responsible for tracking the user's location and determining if they have left the specified range.
+
+Request permission for location updates (when in use).
+Start location updates when the alarm goes off.
+Stop location updates when the alarm is dismissed or after the specified time limit.
+b. AlarmDetailView: Update the view to include a toggle switch for enabling/disabling the location-based wake-up check feature.
+
+c. AlarmScheduler: Update the scheduling process to include the location-based wake-up check feature when scheduling alarms.
+
+d. AlarmNotificationManager: Update the manager to handle location updates from LocationManager and determine if the user has left the specified range.
+
+To implement the location-based wake-up check feature, follow these steps:
+
+Update the AlarmDetailView to include a toggle switch for the location-based feature. Save the user's choice along with the other alarm details.
+
+In the LocationManager, request permission for location updates and implement methods to start and stop location updates.
+
+Update the AlarmScheduler to pass the location-based feature flag to the AlarmNotificationManager.
+
+When the alarm goes off, if the location-based feature is enabled, start location updates in the LocationManager.
+
+As the LocationManager receives location updates, check if the user has left the specified range (e.g., 50 meters from the initial location). If the user has left the range, consider them "woken up" and stop the location updates and alarm.
+
+If the user doesn't leave the specified range within the given time limit, stop the location updates and continue with the existing flow, such as sending a text message using the Twilio API.
+
+By following these steps, you can integrate a location-based wake-up check feature to your iOS social accountability alarm clock app.
+
+
+
+
+AIT Alarmer
+is this in a new file?
+Yes, you should create new files for the new classes mentioned. Here's a breakdown of the files you should create or update:
+
+LocationManager.swift: This is a new file containing the LocationManager class responsible for handling location updates and permissions.
+
+AlarmDetailView.swift: This is an existing file that you should update to include the toggle switch for the location-based wake-up check feature.
+
+AlarmScheduler.swift: This is an existing file that you should update to pass the location-based feature flag to the AlarmNotificationManager.
+
+AlarmNotificationManager.swift: This is an existing file that you should update to handle location updates from the LocationManager.
+
+By creating separate files for each class, you can keep your code organized and maintainable. To use these classes in other parts of your app, make sure to import them as needed.
+
+AlarmScheduler and AlarmNotificationManager serve different purposes in your alarm clock app, and separating their functionalities helps to maintain a clean and organized code structure. Here's an overview of their roles:
+
+Scheduler stuff: 
+
+AlarmScheduler:
+The AlarmScheduler is responsible for handling the scheduling, updating, and canceling of alarms. It receives input from the user interface, such as the alarm time and other settings, and uses the AlarmNotificationManager to manage local notifications accordingly. The primary tasks of the AlarmScheduler include:
+Scheduling new alarms.
+Updating existing alarms.
+Canceling alarms.
+Handling any alarm-related logic, such as repeating alarms or location-based wake-up checks.
+AlarmNotificationManager:
+The AlarmNotificationManager is responsible for managing the local notifications, including scheduling, canceling, and receiving notifications. It acts as an interface between the AlarmScheduler and the UserNotifications framework. The primary tasks of the AlarmNotificationManager include:
+Scheduling local notifications with the appropriate time, sound, and other settings.
+Canceling scheduled local notifications.
+Handling the delivery of local notifications (e.g., when an alarm goes off).
+Handling user interactions with local notifications (e.g., when a user dismisses an alarm).
+By separating the responsibilities of these two classes, you can ensure that each class has a single responsibility, making the code easier to maintain and extend. The AlarmScheduler handles the alarm-related logic and settings, while the AlarmNotificationManager focuses on the actual management of local notifications. This separation of concerns follows the SOLID design principles, specifically the Single Responsibility Principle, and helps to create a more modular and maintainable codebase.
+
+
+Feature Ideas:
+
+Snooze Notifier - Notifies a designated contact the amount of times you snoozed. 
+Sends a text displaying how many times you snoozed to person. 
+
+Alarm Data Visualization Data 
+Goal Tracker 
+Customizable Challenges: Create a feature that allows users to set up personalized challenges, such as a 30-day no-snooze challenge, with built-in rewards or penalties for success or failure.
